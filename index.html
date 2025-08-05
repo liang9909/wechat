@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>公众号超级排版工具 (卡片版)</title>
+    <title>公众号超级排版工具 (复制功能修正版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -295,9 +295,34 @@
             if (preview.querySelector('.placeholder-text')) {
                 alert('没有内容可以复制！'); return;
             }
-            const clone = preview.cloneNode(true);
-            clone.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
-            navigator.clipboard.writeText(clone.innerHTML).then(() => {
+            // *** FIXED COPY LOGIC ***
+            const contentBox = document.getElementById('article-content-box');
+            if (!contentBox) {
+                alert('没有内容可以复制！'); return;
+            }
+
+            // Create a clean clone for copying
+            const clone = contentBox.cloneNode(true);
+            
+            // Get all generated elements inside the clone
+            const elementsToCopy = Array.from(clone.querySelectorAll('.preview-element'));
+            
+            // Extract the pure HTML from each element
+            let finalHtml = '';
+            elementsToCopy.forEach(el => {
+                // Remove the delete button from the clone
+                const deleteBtn = el.querySelector('.delete-btn');
+                if (deleteBtn) {
+                    deleteBtn.remove();
+                }
+                // Append the clean inner HTML of the preview-element
+                finalHtml += el.innerHTML;
+            });
+            
+            // Now, wrap this clean HTML with the card container style
+            const finalWrappedHtml = `<div style="background-color: #f7f8fa; padding: 10px 20px; border-radius: 12px;">${finalHtml}</div>`;
+
+            navigator.clipboard.writeText(finalWrappedHtml).then(() => {
                 toast.classList.remove('opacity-0', 'translate-y-2');
                 setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-2'); }, 2000);
             }).catch(() => alert('复制失败，您的浏览器可能不支持此功能。'));
